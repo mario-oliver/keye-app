@@ -1,9 +1,17 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation'
-import React from 'react'
+import React, { Suspense } from 'react'
 
 export default function ProcessedPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProcessedPageContent />
+    </Suspense>
+  )
+}
+
+function ProcessedPageContent() {
   const searchParams = useSearchParams()
 
   const fileName = searchParams.get('file_name')
@@ -17,9 +25,6 @@ export default function ProcessedPage() {
     <div className="flex flex-col justify-center items-center min-h-screen space-y-4">
       <h1 className="text-2xl font-bold">Processed File</h1>
       <p>File Name: {fileName}</p>
-      {/* <p>S3 URL: {s3Url}</p> */}
-      {/* <p>s3Key: {s3Key}</p>
-      <p>s3Bucket: {s3Bucket}</p> */}
       <a
         href={`https://keye-output-files.s3.us-east-1.amazonaws.com/${metadataKey}`}
         target="_blank"

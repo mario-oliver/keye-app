@@ -1,0 +1,39 @@
+{
+  "Records": [
+    {
+      "eventVersion": "2.1",
+      "eventSource": "aws:s3",
+      "awsRegion": "us-east-1",
+      "eventTime": "2024-12-13T21:55:19.564Z",
+      "eventName": "ObjectCreated:Put",
+      "userIdentity": {
+        "principalId": "AWS:AIDA46KV7JTVMEORJD5DG"
+      },
+      "requestParameters": {
+        "sourceIPAddress": "100.6.90.111"
+      },
+      "responseElements": {
+        "x-amz-request-id": "PPBAWE2W6N32CACT",
+        "x-amz-id-2": "CYrx/dQ/ypa6reTGEMbLyXpr8Cxka8MNFATNn10WpqcUukO9l/9j6s4aTeGQxj7g9TYMyUovghjsrm0erxFnd0Ic7DXK+Nm4"
+      },
+      "s3": {
+        "s3SchemaVersion": "1.0",
+        "configurationId": "NewFileUpload",
+        "bucket": {
+          "name": "chatbook-2023",
+          "ownerIdentity": {
+            "principalId": "A2RDJ70NZS75WU"
+          },
+          "arn": "arn:aws:s3:::chatbook-2023"
+        },
+        "object": {
+          "key": "Deal.xlsx",
+          "size": 4982,
+          "eTag": "b5e65eacc929dc25be12ec9ca1b8f904",
+          "versionId": "rFCygcBWxDCh52FJqT_apmgHWUQLobN7",
+          "sequencer": "00675CAD47826366B2"
+        }
+      }
+    }
+  ]
+}

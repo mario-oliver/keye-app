@@ -1,0 +1,108 @@
+When dealing with merged cells in Excel, pandas doesn’t automatically unmerge or reinterpret those cells the way a human would. As a result, headers that span multiple rows/columns (due to merges) can get distorted or appear as `NaN` where you'd expect a meaningful header.
+
+In your example, one column header (`buyer`) is vertically merged and another (`date_closed`) is horizontally merged. When pandas reads this file, it tries to use a single row of headers, and merged cells often end up as empty cells (i.e., `NaN`) because pandas cannot determine their intended structure from the flattened data alone.
+
+**Key Insight:**  
+You cannot rely on pandas’ default header inference when dealing with merged cells. Instead, you must either:
+
+1. **Read Without Headers and Manually Reconstruct Them**
+2. **Use an Excel Parsing Library (like openpyxl) First, Then Construct a DataFrame**
+
+### Option 1: Read Without Headers and Manually Reconstruct
+
+```python
+import pandas as pd
+
+# Read the Excel file with no header inference
+df_raw = pd.read_excel("yourfile.xlsx", header=None)
+
+# Now df_raw includes all rows as data, including your merged headers.
+# You must inspect the top few rows to identify how to reconstruct headers.
+
+# For example, suppose:
+# Row 0 might contain something like: ["Yep", None, None, "buyer", None]
+# Row 1 might contain: ["deal_name", "deal_size_($m)", "date_closed", None, "seller"]
+
+# You can attempt a logic like:
+header_rows = df_raw.head(2)  # Adjust as needed, depending on where your headers lie
+
+# Suppose the vertical merge for "buyer" is actually just empty cells in top row:
+# We might combine rows to fill in missing headers:
+combined_headers = []
+for col_idx in range(header_rows.shape[1]):
+    top_val = header_rows.iloc[0, col_idx]
+    second_val = header_rows.iloc[1, col_idx]
+
+    # Heuristic: If top_val is a string and not NaN, use it;
+    # If top_val is NaN but second_val is a string, use that.
+    # If both have values, you might combine them (e.g., "Yep" and "buyer")
+    # If one is a "parent" header (like "Yep") spanning multiple columns and the one below is "buyer", 
+    # you might choose the more specific one or combine them into a single column name.
+    
+    if pd.notna(top_val) and pd.notna(second_val) and top_val.strip() != "":
+        # e.g., combine them if needed
+        combined_headers.append((str(top_val) + "_" + str(second_val)).lower().replace(" ","_"))
+    elif pd.notna(top_val) and top_val.strip() != "":
+        combined_headers.append(str(top_val).lower().replace(" ", "_"))
+    elif pd.notna(second_val) and second_val.strip() != "":
+        combined_headers.append(str(second_val).lower().replace(" ", "_"))
+    else:
+        combined_headers.append("unnamed_column")
+
+# Now drop the header rows from the raw data
+df = df_raw.iloc[2:].copy()  # Assuming headers were in the first two rows
+df.columns = combined_headers
+
+# From here, df should have the reconstructed headers.
+print(df.head())
+```
+
+You will have to tweak this logic to handle your specific scenario. For horizontally merged cells, the top row might have a label that needs to be spread across multiple columns. For vertically merged cells, you may need to grab the label from a cell above and apply it downwards.
+
+**In short:**  
+- Read with `header=None` to get raw data.  
+- Inspect the top rows to programmatically determine column names.  
+- Assign those column names to `df` after dropping the initial rows.
+
+### Option 2: Use openpyxl Directly
+
+Another approach is to use `openpyxl` directly to understand the merges. `openpyxl` can tell you which cells are merged. You can then extract those merged regions, figure out the intended header text, and construct a single header row. After that, you can pass this processed header and remaining rows into a DataFrame.
+
+For example:
+
+```python
+from openpyxl import load_workbook
+import pandas as pd
+
+wb = load_workbook("yourfile.xlsx")
+ws = wb.active
+
+# Get all merged cell ranges
+for merged_range in ws.merged_cells.ranges:
+    # merged_range is something like "B1:D1" indicating horizontal merge
+    # You can get the top-left cell value:
+    top_left = ws.cell(row=merged_range.min_row, column=merged_range.min_col).value
+    # Use this info to apply the top_left value across all affected columns
+
+# After resolving merges and creating a final header list:
+headers = ["deal_name", "deal_size_$m", "date_closed", "buyer", "seller"]
+
+# Now read again with header=None but skip top rows, or just construct df from openpyxl values:
+data = []
+for row in ws.iter_rows(min_row=3, values_only=True):  # assuming first 2 rows were headers
+    data.append(row)
+
+df = pd.DataFrame(data, columns=headers)
+```
+
+This requires more custom code, but it gives you full control over how you interpret the merged headers.
+
+---
+
+**Bottom Line:**  
+When dealing with merged cells, pandas alone isn’t enough. You must either:
+
+- Turn off header inference and manually parse the top rows to derive column names.
+- Or use a tool like openpyxl to understand merges and create a consistent, flat header structure before loading data into pandas.
+
+In the given example, after such processing, you can ensure that `buyer` doesn’t get dropped and that `date_closed` is correctly identified as a single column heading.

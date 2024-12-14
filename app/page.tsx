@@ -33,10 +33,11 @@ export default function Home() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
+    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-20 gap-16 font-[family-name:var(--font-geist-sans)]">
+      <Image className="rounded-full" src="/logo.png" alt="logo" height={100} width={100}></Image>
+      <main className="flex flex-col gap-4 row-start-2 items-center">
         <FileUpload onFileUploaded={handleFileUploaded} />
-
+        {files && <h1 className="text-2xl font-bold pt-12">Uploaded Files</h1>}
         {files.map(file => {
           return (
             <Link

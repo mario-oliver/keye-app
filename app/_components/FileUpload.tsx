@@ -93,7 +93,7 @@ const FileUpload = ({ onFileUploaded }: FileUploadProps) => {
           <File />
         </div>
         <p>Drag &apos;n&apos; drop or click to select files</p>
-        <p>(Only .xlsx and .csv files are allowed)</p>
+        <p>(Only .xlsx files are allowed)</p>
 
         <ul>
           {files.map(file => (
